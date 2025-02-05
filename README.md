@@ -6,7 +6,7 @@ This project implements a **Convolutional Neural Network (CNN)** using TensorFlo
 ## 📂 Dataset
 - **Dataset Location:** `Dataset/TRAIN` and `Dataset/TEST`
 - Ensure you have images properly categorized into subdirectories based on class labels.
-- [Dataset Link](#) (Replace with actual dataset link if available)
+- [Dataset Link](#) (https://www.kaggle.com/datasets/techsash/waste-classification-data)
 
 ## 🚀 Installation
 To set up the project, follow these steps:
