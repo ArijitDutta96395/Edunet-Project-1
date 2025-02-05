@@ -1,3 +1,4 @@
 streamlit
 kaggle
 kagglehub
+sigstore
