@@ -20,6 +20,21 @@ cd cnn-image-classification
 pip install -r requirements.txt
 ```
 
+## 📦 Dependencies
+This project requires the following Python packages:
+- numpy
+- pandas
+- matplotlib
+- seaborn
+- cv2 (OpenCV)
+- tqdm
+- warnings
+- sklearn
+- tensorflow
+- keras
+- pickle
+- glob
+
 ## 🏋️ Training the Model
 To train the CNN model, run the following command:
 ```bash
