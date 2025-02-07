@@ -1,4 +1,7 @@
 streamlit
-kaggle
-kagglehub
-sigstore
+numpy
+pandas
+tensorflow
+opencv-python
+matplotlib
+pillow
