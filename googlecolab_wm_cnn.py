@@ -1,142 +1,64 @@
 import streamlit as st
-
-import kagglehub
-
-# Download latest version
-path = kagglehub.dataset_download("techsash/waste-classification-data")
-
-print("Path to dataset files:", path)
-
-# Importing necessary libraries
 import numpy as np
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import cv2
-from tqdm import tqdm
-import warnings
-warnings.filterwarnings('ignore')
+import tensorflow as tf
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from PIL import Image
+import tempfile
+import os
 
-train_path = "/root/.cache/kagglehub/datasets/techsash/waste-classification-data/versions/1/DATASET/TRAIN"
-test_path = "/root/.cache/kagglehub/datasets/techsash/waste-classification-data/versions/1/DATASET/TEST"
+# Streamlit UI Title
+st.title("Waste Classification Model")
+st.write("Upload an image to classify it as **Recyclable** or **Organic Waste**")
 
-# Importing Libraries
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense, BatchNormalization
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img
-from tensorflow.keras.utils import plot_model
-from glob import glob
+# Define Image Size
+IMG_SIZE = (224, 224)
 
-# Visualization
-from cv2 import cvtColor
-x_data = []
-y_data = []
-for category in glob(train_path+'/*'):
-    for file in tqdm(glob(category+'/*')):
-        img_array = cv2.imread(file)
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2RGB)
-        x_data.append(img_array)
-        y_data.append(category.split('/')[-1])
-data = pd.DataFrame({'image':x_data, 'label':y_data})
+# Load Pretrained Model (Ensure you have a trained model as 'waste_classifier.h5')
+@st.cache_resource
+def load_trained_model():
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), input_shape=(224, 224, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Flatten())
+    model.add(Dense(256, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(2, activation='softmax'))
+    
+    model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+    model.load_weights("waste_classifier.h5")  # Ensure the trained model weights exist
+    return model
 
-data.shape
+model = load_trained_model()
 
-colors = ['#a0d157', '#c48bb8']
-plt.pie(data.label.value_counts(), labels=['Organic', 'Recyclable'], autopct='%0.2f%%',
-        colors = colors, startangle = 90,  explode=[0.05, 0.05])
-plt.show()
+# File Uploader
+uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "png", "jpeg"])
 
-plt.figure(figsize=(20, 15))
-for i in range(9):
-    plt.subplot(4, 3,(i%12)+1)
-    index = np.random.randint(15000)
-    plt.title('This is of {0}'.format(data.label[index]))
-    plt.imshow(data.image[index])
-    plt.tight_layout()
+def classify_image(img):
+    img = cv2.resize(img, IMG_SIZE)
+    img = np.reshape(img, (-1, 224, 224, 3)) / 255.0  # Normalize
+    prediction = model.predict(img)
+    result = np.argmax(prediction)
+    labels = ["Recyclable Waste", "Organic Waste"]
+    return labels[result]
 
-model = Sequential()
-
-model.add(Conv2D(32, (3, 3), input_shape=(224, 224, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(128, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D())
-
-model.add(Flatten())
-
-model.add(Dense(256))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-model.add(Dense(64))
-model.add(Activation('relu'))
-model.add(Dropout(0.5))
-
-model.add(Dense(2))
-model.add(Activation('sigmoid'))
-
-model.compile(loss = "binary_crossentropy",
-              optimizer = "adam",
-              metrics = ["accuracy"])
-batch_size = 64
-
-model.summary()
-
-train_datagen = ImageDataGenerator(rescale = 1./255)
-
-test_datagen = ImageDataGenerator(rescale=1./255)
-
-train_generator = train_datagen.flow_from_directory(
-    train_path,
-    target_size = (224, 224),
-    batch_size = batch_size,
-    color_mode = "rgb",
-    class_mode = "categorical")
-
-test_generator = test_datagen.flow_from_directory(
-    test_path,
-    target_size = (224, 224),
-    batch_size = batch_size,
-    color_mode = "rgb",
-    class_mode = "categorical")
-
-hist = model.fit(
-    train_generator,
-    epochs=15,
-    validation_data=test_generator)
-
-plt.figure(figsize=(10,6))
-plt.plot(hist.history['accuracy'], label='Train Accuracy')
-plt.plot(hist.history['val_accuracy'], label=' Validation Accuracy')
-plt.legend()
-plt.show()
-
-plt.figure(figsize=(10,6))
-plt.plot(hist.history['loss'], label='Training Loss')
-plt.plot(hist.history['val_loss'], label='Validation Loss')
-plt.legend()
-plt.show()
-
-def predict_fun(img):
-  plt.figure(figsize=(6, 4))
-  plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-  plt.tight_layout()
-  img = cv2.resize(img, (224, 224))
-  img = np.reshape(img, [-1, 224, 224, 3])
-  result = np.argmax(model.predict(img))
-  if result == 0:
-    print('The image shown is Recyclable Waste')
-  elif result == 1:
-    print('The image shown is Organic Waste')
-
-test_img = cv2.imread('/content/veg.jpg')
-predict_fun(test_img)
-
-test_img = cv2.imread('/content/pls.jpg')
-predict_fun(test_img)
-
+if uploaded_file is not None:
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    
+    # Display Image
+    st.image(img, caption="Uploaded Image", use_column_width=True)
+    
+    # Perform Classification
+    result = classify_image(img)
+    st.write(f"### Predicted Category: {result}")
