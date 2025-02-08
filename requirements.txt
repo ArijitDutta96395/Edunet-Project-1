@@ -5,3 +5,4 @@ tensorflow
 opencv-python-headless
 matplotlib
 pillow
+git-lfs
