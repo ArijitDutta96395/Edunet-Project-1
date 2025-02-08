@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import cv2
 import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -16,15 +15,22 @@ st.write("Upload an image to classify it as **Recyclable** or **Organic Waste**"
 # Define Image Size
 IMG_SIZE = (224, 224)
 
-# Load Pretrained Model (Ensure 'waste_classifier.h5' exists in the same directory)
-def load_trained_model():
-    model_path = "waste_classifier.h5"
-    if not os.path.exists(model_path):
-        st.error(f"Error: Model file '{model_path}' not found. Make sure it's correctly uploaded and pulled from Git LFS.")
-        return None
-    return load_model(model_path)
+# Check if the model file exists
+model_path = "waste_classifier.h5"
+if not os.path.exists(model_path):
+    st.error(f"❌ Model file '{model_path}' is missing. Make sure it's correctly uploaded and pulled from Git LFS.")
+    os.system("ls -lh")  # Debug: List all files in the current directory
+    os.system("git lfs ls-files")  # Debug: Check if the model is in Git LFS
+    model = None
+else:
+    st.success(f"✅ Model file '{model_path}' found!")
 
-model = load_trained_model()
+    # Load Pretrained Model
+    @st.cache_resource
+    def load_trained_model():
+        return load_model(model_path)  # Directly load the saved model
+
+    model = load_trained_model()
 
 # File Uploader
 uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "png", "jpeg"])
@@ -53,3 +59,4 @@ if uploaded_file is not None:
         result = classify_image(image)
         st.write(f"### Predicted Category: {result}")
     else:
+        st.error("❌ Model loading failed. Check if 'waste_classifier.h5' is available.")
