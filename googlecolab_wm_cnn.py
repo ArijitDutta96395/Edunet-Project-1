@@ -1,9 +1,13 @@
 import streamlit as st
 import numpy as np
 import cv2
+import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
+
+# Ensure Git LFS files are pulled
+os.system("git lfs pull")
 
 # Streamlit UI Title
 st.title("Waste Classification Model")
@@ -13,9 +17,12 @@ st.write("Upload an image to classify it as **Recyclable** or **Organic Waste**"
 IMG_SIZE = (224, 224)
 
 # Load Pretrained Model (Ensure 'waste_classifier.h5' exists in the same directory)
-@st.cache_resource
 def load_trained_model():
-    return load_model("waste_classifier.h5")  # Directly load the saved model
+    model_path = "waste_classifier.h5"
+    if not os.path.exists(model_path):
+        st.error(f"Error: Model file '{model_path}' not found. Make sure it's correctly uploaded and pulled from Git LFS.")
+        return None
+    return load_model(model_path)
 
 model = load_trained_model()
 
@@ -41,6 +48,8 @@ if uploaded_file is not None:
     # Display the uploaded image
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Perform classification
-    result = classify_image(image)
-    st.write(f"### Predicted Category: {result}")
+    # Perform classification if model is loaded
+    if model is not None:
+        result = classify_image(image)
+        st.write(f"### Predicted Category: {result}")
+    else:
