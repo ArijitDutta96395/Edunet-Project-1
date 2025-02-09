@@ -5,10 +5,14 @@ from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 
-# Ensure Git LFS is installed and pull the model file
-os.system("apt-get install -y git-lfs")  # For Linux (Streamlit Cloud)
+# Install Git LFS manually (for non-root users)
+os.system("curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash")
+os.system("sudo apt-get install git-lfs")
 os.system("git lfs install")
 os.system("git lfs pull")
+
+# Debugging: Verify the model file size
+os.system("ls -lh waste_classifier.h5")
 
 # Debugging: List files to check if the model is present
 st.write("📂 Listing files in the repository:")
