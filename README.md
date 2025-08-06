@@ -52,6 +52,22 @@ python inference.py --image path_to_image.jpg
 - **Flatten + Dense** layers for classification
 - Dropout layers to prevent overfitting
 
+## 📊 Project Outputs
+
+<div align="center">
+  <a href="https://github.com/ArijitDutta96395/Edunet-Project-1">
+    <img
+      src="https://github.com/ArijitDutta96395/Edunet-Project-1/blob/main/pic4.png?raw=true"
+      alt="Project Output Screenshot"
+      width="400"
+      style="border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.2);"
+    />
+  </a>
+  <br /><br />
+  <a href="https://github.com/ArijitDutta96395/Edunet-Project-1"><b>Project Outputs</b></a>
+</div>
+
+
 ## 📜 Results
 - Model accuracy and loss plots are saved in `/results`
 - Predictions can be viewed using `inference.py`
